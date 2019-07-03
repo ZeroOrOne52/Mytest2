@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+
+<mapper namespace="com.smbms.dao.UserMapper">
+	<select id="findUserByCondition" parameterType="map" resultType="user">
+		select * from smbms_user 
+		<where>
+			<!-- 
+				由于参数时map集合，#{}占位符以及条件中的变量都得使用map集合中的key
+				如果：参数为注解@Param,#{}占位符以及条件中的变量都得使用注解中的内容，例如：@Param("code")
+				如果：参数为实体类，#{}占位符以及条件中的变量都得使用实体类的属性名
+			 -->
+			<if test="userCode!=null and userCode!=''">
+				and userCode like concat('%',#{userCode},'%')
+			</if>
+			<if test="roleId!=null">
+				and userRole = #{roleId}
+			</if>
+		 </where>
+	</select>
+	
+	
+	<select id="findUserWithTrim" parameterType="map" resultType="user">
+		select * from smbms_user 
+		<!-- 
+			prefix:前缀
+			prefixOverrides：剔除前面的and或or
+		 -->
+		<trim prefix="where" prefixOverrides="and | or">
+			<if test="userCode!=null and userCode!=''">
+				and userCode like concat('%',#{userCode},'%')
+			</if>
+			<if test="roleId!=null">
+				and userRole = #{roleId}
+			</if>
+		</trim>
+	</select>
+	
+	<!-- <update id="updateUser" parameterType="user">
+		update smbms_user 
+		<set>
+			<if test="userName!=null and userName!=''">
+				username = #{userName},
+			</if>
+			<if test="gender!=null">
+				gender = #{gender},
+			</if>
+			<if test="phone!=null and phone!=''">
+				phone = #{phone},
+			</if>
+			<if test="userRole!=null">
+				userRole = #{userRole},
+			</if>
+		</set>
+		
+		where id = #{id}
+		
+	</update> -->
+	 
+	 <update id="updateUser" parameterType="user">
+		update smbms_user 
+		<!-- 
+			suffix:后缀
+			suffixOverrides:剔除最后一个逗号,
+		 -->
+		<trim prefix="set" suffixOverrides="," suffix="where id=#{id}">
+			<if test="userName!=null and userName!=''">
+				username = #{userName},
+			</if>
+			<if test="gender!=null">
+				gender = #{gender},
+			</if>
+			<if test="phone!=null and phone!=''">
+				phone = #{phone},
+			</if>
+			<if test="userRole!=null">
+				userRole = #{userRole},
+			</if>
+		</trim>
+	</update>
+	
+	<select id="findUserListWithArray" resultType="user">
+		SELECT * FROM smbms_user where userRole in
+		<!-- 
+			collection:类型，必填
+				如果是数组：array
+				list集合：list
+				map集合：填写map集合中的key
+			item：填写#{}占位符内容
+		 -->
+		<foreach collection="array" item="roleIds" open="(" separator="," close=")">
+			#{roleIds}
+		</foreach>
+	</select>
+	
+	<select id="findUserListWithList" resultType="user">
+		SELECT * FROM smbms_user where userRole in
+		<!-- 
+			collection:类型，必填
+				如果是数组：array
+				list集合：list
+				map集合：填写map集合中的key
+			item：填写#{}占位符内容
+		 -->
+		<foreach collection="list" item="roleIds" open="(" separator="," close=")">
+			#{roleIds}
+		</foreach>
+	</select>
+	
+	
+	<select id="findUserListWithMap" resultType="user">
+		SELECT * FROM smbms_user where gender =#{sex} and userRole in
+		<!-- 
+			collection:类型，必填
+				如果是数组：array
+				list集合：list
+				map集合：填写map集合中的key(是要循环遍历的key)
+			item：填写#{}占位符内容
+		 -->
+		<foreach collection="roleIds" item="roleIds" open="(" separator="," close=")">
+			#{roleIds}
+		</foreach>
+	</select>
+	
+	<select id="findUserListByPage" parameterType="map" resultType="user">
+		SELECT * FROM smbms_user 
+		order by id 
+		LIMIT #{start},#{size}
+	</select>
+	
+	
+	<select id="findUserListWithChoose" parameterType="map"  resultType="user">
+		SELECT * FROM smbms_user where 1=1
+			<choose>
+				<when test="userName != null and userName != ''">
+					and userName like concat('%',#{userName},'%')
+				</when>
+				<when test="userCode != null and userCode != ''">
+					and userCode like concat('%',#{userCode},'%')
+				</when>
+				<otherwise>
+					and gender = #{gender}
+				</otherwise>
+			</choose>
+	</select>
+	
+	
+</mapper>
